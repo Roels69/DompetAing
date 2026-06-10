@@ -1,0 +1,948 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Catatan Keuangan</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,-apple-system,sans-serif;background:#f5f5f0;color:#1a1a1a;min-height:100vh}
+.header{background:#1F3864;color:#fff;padding:1rem 1.25rem;display:flex;align-items:center;justify-content:space-between}
+.header-title{font-size:16px;font-weight:500}
+.header-sub{font-size:12px;opacity:.7;margin-top:2px}
+.header-right{display:flex;align-items:center;gap:8px}
+.sync-status{font-size:11px;opacity:.7;display:flex;align-items:center;gap:4px}
+.sync-dot{width:7px;height:7px;border-radius:50%;background:#ccc;transition:background .3s}
+.sync-dot.ok{background:#4ade80}
+.sync-dot.syncing{background:#fbbf24;animation:pulse 1s infinite}
+.sync-dot.err{background:#f87171}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.container{max-width:480px;margin:0 auto;padding:1rem}
+.wallets{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:1rem}
+.wallet-card{background:#fff;border-radius:12px;padding:.875rem;text-align:center;border:1px solid #e5e5e5}
+.wallet-card.bank{border-top:3px solid #378ADD}
+.wallet-card.gopay{border-top:3px solid #1D9E75}
+.wallet-card.cash{border-top:3px solid #BA7517}
+.wallet-icon{font-size:20px;margin-bottom:4px}
+.wallet-name{font-size:11px;color:#888;margin-bottom:3px}
+.wallet-balance{font-size:15px;font-weight:600;word-break:break-all}
+.wallet-balance.bank{color:#185FA5}
+.wallet-balance.gopay{color:#0F6E56}
+.wallet-balance.cash{color:#854F0B}
+.total-row{background:#1F3864;border-radius:10px;padding:10px 14px;display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem}
+.total-label{font-size:12px;color:rgba(255,255,255,.7)}
+.total-val{font-size:16px;font-weight:600;color:#fff}
+.nav-tabs{display:flex;gap:0;margin-bottom:1rem;background:#fff;border-radius:10px;border:1px solid #e5e5e5;overflow:hidden}
+.nav-tab{flex:1;padding:10px 4px;border:none;background:transparent;font-size:12px;cursor:pointer;color:#888;transition:all .15s;font-family:inherit;border-right:1px solid #e5e5e5}
+.nav-tab:last-child{border-right:none}
+.nav-tab.active{background:#1F3864;color:#fff;font-weight:500}
+.page{display:none}.page.active{display:block}
+.tabs{display:flex;gap:6px;margin-bottom:.875rem}
+.tab{flex:1;padding:8px 4px;border:1px solid #e5e5e5;border-radius:8px;background:#fff;font-size:12px;cursor:pointer;color:#888;transition:all .15s;font-family:inherit}
+.tab.active{background:#1F3864;color:#fff;border-color:#1F3864;font-weight:500}
+.form-card{background:#fff;border:1px solid #ebebeb;border-radius:14px;padding:1.25rem;margin-bottom:.875rem;box-shadow:0 1px 4px rgba(0,0,0,.04)}
+.form-row{margin-bottom:14px}
+.form-row label{display:block;font-size:11px;color:#999;margin-bottom:6px;font-weight:600;text-transform:uppercase;letter-spacing:.5px}
+.form-row input,.form-row select{width:100%;padding:12px 14px;border:none;border-radius:10px;background:#f2f2f0;color:#1a1a1a;font-size:15px;font-family:inherit;outline:none;transition:background .15s,box-shadow .15s}
+.form-row input:focus,.form-row select:focus{background:#eaf2fb;box-shadow:none}
+.form-row input[type="date"]{cursor:pointer;color:#1a1a1a}
+.form-row input::placeholder{color:#bbb}
+.form-row select{cursor:pointer}
+.form-row-2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+.input-rp-wrap{position:relative}
+.input-rp-wrap::before{content:'Rp';position:absolute;left:13px;top:50%;transform:translateY(-50%);font-size:13px;color:#999;pointer-events:none;font-weight:500}
+.input-rp-wrap input{padding-left:36px}
+.btn-submit{width:100%;padding:13px;border:none;border-radius:10px;background:#1F3864;color:#fff;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;margin-top:4px;letter-spacing:.2px;transition:background .15s,transform .1s}
+.btn-submit:hover{background:#2E75B6}
+.btn-submit:active{transform:scale(.98)}
+.section-label{font-size:12px;font-weight:500;color:#888;margin-bottom:8px;margin-top:4px}
+.history-list{display:flex;flex-direction:column;gap:6px}
+.tx-item{display:flex;align-items:center;gap:10px;background:#fff;border:1px solid #e5e5e5;border-radius:10px;padding:10px 12px}
+.tx-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.tx-dot.income{background:#1D9E75}.tx-dot.expense{background:#E24B4A}.tx-dot.transfer{background:#378ADD}
+.tx-info{flex:1;min-width:0}
+.tx-desc{font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tx-meta{font-size:11px;color:#999;margin-top:1px}
+.tx-amount{font-size:13px;font-weight:600;flex-shrink:0}
+.tx-amount.income{color:#0F6E56}.tx-amount.expense{color:#E24B4A}.tx-amount.transfer{color:#378ADD}
+.tx-del{background:none;border:none;color:#ccc;cursor:pointer;font-size:18px;padding:2px 4px;line-height:1;border-radius:4px}
+.tx-del:hover{color:#E24B4A;background:#fff0f0}
+.empty{text-align:center;padding:2rem;color:#aaa;font-size:13px}
+.loading{text-align:center;padding:2rem;color:#aaa;font-size:13px}
+.btn-reset{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;padding:5px 10px;border-radius:6px;font-size:12px;cursor:pointer;font-family:inherit}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#1F3864;color:#fff;padding:9px 18px;border-radius:20px;font-size:13px;opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap;z-index:999}
+.toast.show{opacity:1}
+
+/* Laporan */
+.report-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem}
+.report-nav{display:flex;align-items:center;gap:8px}
+.report-nav button{background:#fff;border:1px solid #e5e5e5;border-radius:8px;padding:6px 12px;cursor:pointer;font-size:16px;color:#444}
+.report-month{font-size:15px;font-weight:600;min-width:140px;text-align:center}
+.report-summary{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:1rem}
+.report-card{background:#fff;border:1px solid #e5e5e5;border-radius:12px;padding:1rem;text-align:center}
+.report-card.full{grid-column:1/-1}
+.report-card-label{font-size:11px;color:#888;margin-bottom:4px}
+.report-card-val{font-size:17px;font-weight:600}
+.report-card-val.income{color:#0F6E56}
+.report-card-val.expense{color:#E24B4A}
+.report-card-val.saving{color:#185FA5}
+.wallet-breakdown{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:1rem}
+.wb-card{background:#fff;border:1px solid #e5e5e5;border-radius:10px;padding:.75rem;text-align:center}
+.wb-label{font-size:11px;color:#888;margin-bottom:3px}
+.wb-val{font-size:13px;font-weight:600;color:#E24B4A}
+.cat-list{display:flex;flex-direction:column;gap:6px;margin-bottom:1rem}
+.cat-item{background:#fff;border:1px solid #e5e5e5;border-radius:10px;padding:10px 12px}
+.cat-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.cat-name{font-size:13px;font-weight:500}
+.cat-amount{font-size:13px;font-weight:600;color:#E24B4A}
+.cat-bar-bg{height:5px;background:#f0f0f0;border-radius:3px;overflow:hidden}
+.cat-bar{height:5px;background:#E24B4A;border-radius:3px;transition:width .4s}
+.cat-pct{font-size:10px;color:#aaa;margin-top:3px;text-align:right}
+
+/* Kategori manager */
+.kat-list{display:flex;flex-direction:column;gap:6px;margin-bottom:1rem}
+.kat-item{display:flex;align-items:center;justify-content:space-between;background:#fff;border:1px solid #e5e5e5;border-radius:10px;padding:10px 12px;font-size:13px}
+.kat-item.default{color:#aaa}
+.kat-del{background:none;border:none;color:#ccc;cursor:pointer;font-size:16px;padding:2px 6px;border-radius:4px}
+.kat-del:hover{color:#E24B4A;background:#fff0f0}
+.add-kat-row{display:flex;gap:8px}
+.add-kat-row input{flex:1;padding:9px 11px;border:1px solid #ddd;border-radius:8px;font-size:14px;font-family:inherit;outline:none}
+.add-kat-row input:focus{border-color:#378ADD}
+.add-kat-row button{padding:9px 14px;border:none;border-radius:8px;background:#1F3864;color:#fff;font-size:13px;cursor:pointer;font-family:inherit;white-space:nowrap}
+.add-kat-row button:hover{background:#2E75B6}
+
+/* OVERRIDE - flat inputs */
+input, select, input[type="date"], input[type="number"], input[type="text"] {
+  border: none !important;
+  border-radius: 10px !important;
+  background: #f2f2f0 !important;
+  outline: none !important;
+  box-shadow: none !important;
+  -webkit-appearance: none !important;
+  appearance: none !important;
+}
+input:focus, select:focus {
+  background: #eaf2fb !important;
+}
+input[type="date"]::-webkit-calendar-picker-indicator {
+  opacity: 0.5;
+}
+
+/* Edit kategori modal */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:1000;display:flex;align-items:flex-end;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s}
+.modal-overlay.show{opacity:1;pointer-events:all}
+.modal-box{background:#fff;border-radius:16px 16px 0 0;padding:1.25rem;width:100%;max-width:480px;transform:translateY(100%);transition:transform .25s}
+.modal-overlay.show .modal-box{transform:translateY(0)}
+.modal-title{font-size:15px;font-weight:600;margin-bottom:4px}
+.modal-sub{font-size:12px;color:#999;margin-bottom:16px}
+.modal-cats{display:flex;flex-direction:column;gap:6px;max-height:50vh;overflow-y:auto;margin-bottom:1rem}
+.modal-cat-btn{padding:11px 14px;border:1.5px solid #ebebeb;border-radius:10px;background:#f8f8f8;font-size:14px;font-family:inherit;text-align:left;cursor:pointer;transition:all .15s;color:#1a1a1a}
+.modal-cat-btn:hover{border-color:#378ADD;background:#eaf2fb}
+.modal-cat-btn.selected{border-color:#1F3864;background:#1F3864;color:#fff;font-weight:500}
+.modal-cancel{width:100%;padding:11px;border:none;border-radius:10px;background:#f2f2f0;color:#888;font-size:14px;font-family:inherit;cursor:pointer}
+/* Make tx-item clickable for expense */
+.tx-item.editable{cursor:pointer}
+.tx-item.editable:hover{background:#f8f8f8}
+.tx-edit-hint{font-size:10px;color:#bbb;margin-top:2px}
+
+/* Backup & Restore */
+.backup-section{margin-bottom:1rem}
+.backup-row{display:flex;gap:8px}
+.btn-backup{flex:1;padding:11px;border:none;border-radius:10px;font-size:13px;font-weight:500;cursor:pointer;font-family:inherit;transition:all .15s}
+.btn-export{background:#1F3864;color:#fff}
+.btn-export:hover{background:#2E75B6}
+.btn-import{background:#f2f2f0;color:#444}
+.btn-import:hover{background:#e5e5e5}
+.backup-info{font-size:11px;color:#aaa;margin-top:8px;text-align:center}
+
+/* Date separator in history */
+.date-sep{display:flex;align-items:center;gap:8px;margin:12px 0 6px}
+.date-sep-line{flex:1;height:1px;background:#e5e5e5}
+.date-sep-label{font-size:11px;font-weight:600;color:#aaa;white-space:nowrap}
+
+/* Edit transaksi modal */
+.edit-tx-modal{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:1000;display:flex;align-items:flex-end;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s}
+.edit-tx-modal.show{opacity:1;pointer-events:all}
+.edit-tx-box{background:#fff;border-radius:16px 16px 0 0;padding:1.25rem;width:100%;max-width:480px;transform:translateY(100%);transition:transform .25s;max-height:85vh;overflow-y:auto}
+.edit-tx-modal.show .edit-tx-box{transform:translateY(0)}
+.edit-tx-title{font-size:15px;font-weight:600;margin-bottom:16px}
+.edit-btn-row{display:flex;gap:8px;margin-top:4px}
+.btn-save-edit{flex:1;padding:11px;border:none;border-radius:10px;background:#1F3864;color:#fff;font-size:14px;font-weight:500;cursor:pointer;font-family:inherit}
+.btn-save-edit:hover{background:#2E75B6}
+.btn-cancel-edit{flex:1;padding:11px;border:none;border-radius:10px;background:#f2f2f0;color:#555;font-size:14px;font-family:inherit;cursor:pointer}
+/* Chart */
+.chart-wrap{background:#fff;border:1px solid #ebebeb;border-radius:14px;padding:1rem;margin-bottom:1rem;box-shadow:0 1px 4px rgba(0,0,0,.04)}
+.chart-title{font-size:12px;font-weight:600;color:#888;text-transform:uppercase;letter-spacing:.4px;margin-bottom:12px}
+.chart-bar-row{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.chart-bar-label{font-size:11px;color:#555;width:80px;flex-shrink:0;text-align:right;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chart-bar-track{flex:1;height:18px;background:#f2f2f0;border-radius:6px;overflow:hidden}
+.chart-bar-fill{height:100%;border-radius:6px;background:linear-gradient(90deg,#2E75B6,#378ADD);transition:width .4s}
+.chart-bar-val{font-size:11px;color:#888;width:70px;flex-shrink:0;text-align:right}
+
+/* Pagination */
+.pagination{display:flex;align-items:center;justify-content:space-between;margin-top:12px;gap:8px}
+.page-btn{padding:8px 16px;border:1px solid #e5e5e5;border-radius:8px;background:#fff;font-size:13px;cursor:pointer;font-family:inherit;color:#444;transition:all .15s}
+.page-btn:hover{background:#f0f0f0}
+.page-btn:disabled{opacity:.35;cursor:not-allowed}
+.page-info{font-size:12px;color:#999;text-align:center;flex:1}
+
+/* Daily expense row */
+.daily-row{background:#1F3864;border-radius:10px;padding:10px 14px;display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem}
+.daily-label{font-size:12px;color:rgba(255,255,255,.7)}
+.daily-date{font-size:10px;color:rgba(255,255,255,.4);margin-top:1px}
+.daily-val{font-size:16px;font-weight:600;color:#ff8a8a}
+.daily-val.zero{color:rgba(255,255,255,.35)}
+
+/* Daily total in history */
+.date-sep-total{font-size:11px;font-weight:600;color:#E24B4A;white-space:nowrap;margin-left:4px}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <div class="header-title">💰 Catatan Keuangan</div>
+    <div class="header-sub">Bank · GoPay · Cash</div>
+  </div>
+  <div class="header-right">
+    <div class="sync-status">
+      <div class="sync-dot" id="sync-dot"></div>
+      <span id="sync-label">Menghubungkan...</span>
+    </div>
+    <button class="btn-reset" onclick="resetAll()">Reset</button>
+  </div>
+</div>
+
+<div class="container">
+  <div class="wallets">
+    <div class="wallet-card bank"><div class="wallet-icon">🏦</div><div class="wallet-name">Bank</div><div class="wallet-balance bank" id="bal-bank">Rp 0</div></div>
+    <div class="wallet-card gopay"><div class="wallet-icon">📱</div><div class="wallet-name">GoPay</div><div class="wallet-balance gopay" id="bal-gopay">Rp 0</div></div>
+    <div class="wallet-card cash"><div class="wallet-icon">💵</div><div class="wallet-name">Cash</div><div class="wallet-balance cash" id="bal-cash">Rp 0</div></div>
+  </div>
+  <div class="total-row">
+    <div class="total-label">Total semua dompet</div>
+    <div class="total-val" id="bal-total">Rp 0</div>
+  </div>
+  <div class="daily-row">
+    <div>
+      <div class="daily-label">Pengeluaran hari ini</div>
+      <div class="daily-date" id="daily-date"></div>
+    </div>
+    <div class="daily-val" id="daily-expense">Rp 0</div>
+  </div>
+
+  <div class="nav-tabs">
+    <button class="nav-tab active" onclick="switchPage('catat')">📝 Catat</button>
+    <button class="nav-tab" onclick="switchPage('riwayat')">📋 Riwayat</button>
+    <button class="nav-tab" onclick="switchPage('laporan')">📊 Laporan</button>
+    <button class="nav-tab" onclick="switchPage('kategori')">🏷 Kategori</button>
+  </div>
+
+  <!-- CATAT -->
+  <div class="page active" id="page-catat">
+    <div class="tabs">
+      <button class="tab active" onclick="switchTab('income')">⬇ Pemasukan</button>
+      <button class="tab" onclick="switchTab('expense')">⬆ Pengeluaran</button>
+      <button class="tab" onclick="switchTab('transfer')">⇄ Pindah</button>
+    </div>
+
+    <div class="form-card" id="form-income">
+      <div class="form-row"><label>Tanggal</label><input type="date" id="inc-date"></div>
+      <div class="form-row"><label>Jumlah</label><div class="input-rp-wrap"><input type="number" id="inc-amount" placeholder="0" min="0" inputmode="numeric"></div></div>
+      <div class="form-row">
+        <label>Masuk ke</label>
+        <select id="inc-wallet">
+          <option value="bank">Bank</option>
+          <option value="cash">Cash</option>
+        </select>
+      </div>
+      <div class="form-row">
+        <label>Keterangan</label>
+        <input type="text" id="inc-desc" placeholder="Misal: Gaji bulan Juni">
+      </div>
+      <button class="btn-submit" onclick="addIncome()">+ Tambah Pemasukan</button>
+    </div>
+
+    <div class="form-card" id="form-expense" style="display:none">
+      <div class="form-row"><label>Tanggal</label><input type="date" id="exp-date"></div>
+      <div class="form-row"><label>Jumlah</label><div class="input-rp-wrap"><input type="number" id="exp-amount" placeholder="0" min="0" inputmode="numeric"></div></div>
+      <div class="form-row">
+        <label>Keterangan</label>
+        <input type="text" id="exp-desc" placeholder="Misal: Beli makan siang">
+      </div>
+      <div class="form-row">
+        <label>Ambil dari</label>
+        <select id="exp-wallet">
+          <option value="bank">Bank</option>
+          <option value="gopay">GoPay</option>
+          <option value="cash">Cash</option>
+        </select>
+      </div>
+      <div class="form-row">
+        <label>Kategori</label>
+        <select id="exp-category"></select>
+      </div>
+      <button class="btn-submit" onclick="addExpense()">− Catat Pengeluaran</button>
+    </div>
+
+    <div class="form-card" id="form-transfer" style="display:none">
+      <div class="form-row"><label>Tanggal</label><input type="date" id="tr-date"></div>
+      <div class="form-row"><label>Jumlah</label><div class="input-rp-wrap"><input type="number" id="tr-amount" placeholder="0" min="0" inputmode="numeric"></div></div>
+      <div class="form-row">
+        <label>Keterangan (opsional)</label>
+        <input type="text" id="tr-desc" placeholder="Misal: Top up GoPay">
+      </div>
+      <div class="form-row">
+        <label>Dari</label>
+        <select id="tr-from"><option value="bank">Bank</option><option value="gopay">GoPay</option><option value="cash">Cash</option></select>
+      </div>
+      <div class="form-row">
+        <label>Ke</label>
+        <select id="tr-to"><option value="gopay">GoPay</option><option value="cash">Cash</option><option value="bank">Bank</option></select>
+      </div>
+      <button class="btn-submit" onclick="addTransfer()">⇄ Pindahkan</button>
+    </div>
+  </div>
+
+  <!-- RIWAYAT -->
+  <div class="page" id="page-riwayat">
+    <div class="section-label">Semua transaksi</div>
+    <div class="history-list" id="history"><div class="loading">⏳ Memuat data...</div></div>
+    <div class="pagination" id="pagination" style="display:none">
+      <button class="page-btn" id="btn-prev" onclick="changePage(-1)">‹ Sebelumnya</button>
+      <div class="page-info" id="page-info"></div>
+      <button class="page-btn" id="btn-next" onclick="changePage(1)">Berikutnya ›</button>
+    </div>
+  </div>
+
+  <!-- LAPORAN -->
+  <div class="page" id="page-laporan">
+    <div class="report-header">
+      <div class="report-nav">
+        <button onclick="changeMonth(-1)">‹</button>
+        <div class="report-month" id="report-month-label">—</div>
+        <button onclick="changeMonth(1)">›</button>
+      </div>
+    </div>
+    <div class="report-summary">
+      <div class="report-card"><div class="report-card-label">Pemasukan</div><div class="report-card-val income" id="rep-income">Rp 0</div></div>
+      <div class="report-card"><div class="report-card-label">Pengeluaran</div><div class="report-card-val expense" id="rep-expense">Rp 0</div></div>
+      <div class="report-card full"><div class="report-card-label">Selisih (Hemat)</div><div class="report-card-val saving" id="rep-saving">Rp 0</div></div>
+    </div>
+    <div class="section-label">Pengeluaran per dompet</div>
+    <div class="wallet-breakdown">
+      <div class="wb-card"><div class="wb-label">Bank</div><div class="wb-val" id="rep-bank">Rp 0</div></div>
+      <div class="wb-card"><div class="wb-label">GoPay</div><div class="wb-val" id="rep-gopay">Rp 0</div></div>
+      <div class="wb-card"><div class="wb-label">Cash</div><div class="wb-val" id="rep-cash">Rp 0</div></div>
+    </div>
+    <div class="section-label">Grafik pengeluaran</div>
+    <div class="chart-wrap">
+      <div class="chart-title">Per Kategori</div>
+      <div id="rep-chart"></div>
+    </div>
+    <div class="section-label">Detail per kategori</div>
+    <div class="cat-list" id="rep-cats"><div class="empty">Belum ada pengeluaran bulan ini</div></div>
+  </div>
+
+  <!-- KATEGORI -->
+  <div class="page" id="page-kategori">
+    <div class="form-card">
+      <div class="section-label" style="margin-top:0">Tambah kategori baru</div>
+      <div class="add-kat-row">
+        <input type="text" id="new-kat" placeholder="Nama kategori...">
+        <button onclick="addKategori()">+ Tambah</button>
+      </div>
+    </div>
+    <div class="section-label">Kategori kamu</div>
+    <div class="kat-list" id="kat-list"></div>
+
+    <div class="section-label" style="margin-top:1rem">Backup & Restore</div>
+    <div class="form-card">
+      <div class="backup-row">
+        <button class="btn-backup btn-export" onclick="exportData()">⬇ Export Data</button>
+        <label class="btn-backup btn-import" style="text-align:center;cursor:pointer">
+          ⬆ Import Data
+          <input type="file" id="import-file" accept=".json" style="display:none" onchange="importData(event)">
+        </label>
+      </div>
+      <div class="backup-info">Export simpan data ke file .json · Import restore dari file backup</div>
+    </div>
+  </div>
+</div>
+
+
+<!-- Edit Transaksi Modal -->
+<div class="edit-tx-modal" id="edit-tx-modal" onclick="closeEditTxModal(event)">
+  <div class="edit-tx-box">
+    <div class="edit-tx-title">✏️ Edit Transaksi</div>
+    <div class="form-row"><label>Tanggal</label><input type="date" id="etx-date"></div>
+    <div class="form-row"><label>Jumlah</label><div class="input-rp-wrap"><input type="number" id="etx-amount" placeholder="0" min="0" inputmode="numeric"></div></div>
+    <div class="form-row"><label>Keterangan</label><input type="text" id="etx-desc" placeholder="Keterangan transaksi"></div>
+    <div class="form-row" id="etx-wallet-row"><label>Dompet</label>
+      <select id="etx-wallet">
+        <option value="bank">Bank</option>
+        <option value="gopay">GoPay</option>
+        <option value="cash">Cash</option>
+      </select>
+    </div>
+    <div class="form-row" id="etx-cat-row"><label>Kategori</label><select id="etx-category"></select></div>
+    <div class="form-row" id="etx-from-row" style="display:none"><label>Dari</label>
+      <select id="etx-from"><option value="bank">Bank</option><option value="gopay">GoPay</option><option value="cash">Cash</option></select>
+    </div>
+    <div class="form-row" id="etx-to-row" style="display:none"><label>Ke</label>
+      <select id="etx-to"><option value="gopay">GoPay</option><option value="cash">Cash</option><option value="bank">Bank</option></select>
+    </div>
+    <div class="edit-btn-row">
+      <button class="btn-cancel-edit" onclick="document.getElementById('edit-tx-modal').classList.remove('show')">Batal</button>
+      <button class="btn-save-edit" onclick="saveEditTx()">Simpan</button>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Kategori Modal -->
+<div class="modal-overlay" id="edit-modal" onclick="closeEditModal(event)">
+  <div class="modal-box">
+    <div class="modal-title">Edit Kategori</div>
+    <div class="modal-sub" id="modal-tx-desc">Transaksi</div>
+    <div class="modal-cats" id="modal-cats"></div>
+    <button class="modal-cancel" onclick="closeModal()">Batal</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getFirestore, doc, onSnapshot, setDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyAP2jPZWyyM37sQPBxYQAffja-GR3V5HQE",
+  authDomain: "laporan-keuangan-f6188.firebaseapp.com",
+  projectId: "laporan-keuangan-f6188",
+  storageBucket: "laporan-keuangan-f6188.firebasestorage.app",
+  messagingSenderId: "162829374114",
+  appId: "1:162829374114:web:80be7d1f1841618d75fdfb"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const DOC_REF = doc(db, "keuangan", "data");
+
+const DEFAULT_CATS = ['Makan & Minum','Transport','Belanja','Kost/Sewa','Kesehatan','Hiburan','Lain-lain'];
+let state = {bank:0, gopay:0, cash:0, txs:[], cats: [...DEFAULT_CATS]};
+let currentPage = 0;
+const PAGE_SIZE = 10;
+let saving = false;
+let reportYear = new Date().getFullYear();
+let reportMonth = new Date().getMonth();
+const MONTHS = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+
+// Set default date to today
+function setDefaultDates() {
+  const today = new Date().toISOString().split('T')[0];
+  ['inc-date','exp-date','tr-date'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el && !el.value) el.value = today;
+  });
+}
+
+function setSyncStatus(s) {
+  const dot = document.getElementById('sync-dot');
+  const lbl = document.getElementById('sync-label');
+  dot.className = 'sync-dot ' + s;
+  lbl.textContent = s==='ok'?'Tersinkron':s==='syncing'?'Menyimpan...':'Offline';
+}
+
+function fmt(n) { return 'Rp ' + Math.round(n).toLocaleString('id-ID'); }
+function walletName(w) { return w==='bank'?'Bank':w==='gopay'?'GoPay':'Cash'; }
+
+function formatDateDisplay(isoDate) {
+  if (!isoDate) return '';
+  const [y,m,d] = isoDate.split('-');
+  const months = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+  return `${parseInt(d)} ${months[parseInt(m)-1]} ${y}`;
+}
+
+
+function renderDailyExpense() {
+  const today = new Date().toISOString().split('T')[0];
+  const total = (state.txs||[])
+    .filter(t => t.type==='expense' && t.isoDate===today)
+    .reduce((s,t) => s+t.amount, 0);
+  const el = document.getElementById('daily-expense');
+  el.textContent = fmt(total);
+  el.className = 'daily-val' + (total===0?' zero':'');
+  document.getElementById('daily-date').textContent = formatDateDisplay(today);
+}
+
+function render() {
+  document.getElementById('bal-bank').textContent = fmt(state.bank);
+  document.getElementById('bal-gopay').textContent = fmt(state.gopay);
+  document.getElementById('bal-cash').textContent = fmt(state.cash);
+  document.getElementById('bal-total').textContent = fmt(state.bank + state.gopay + state.cash);
+  renderDailyExpense();
+  renderHistory();
+  renderReport();
+  renderKategori();
+  refreshCatDropdown();
+}
+
+function getSortedTxs() {
+  return state.txs.map((t,i)=>({...t,_i:i})).sort((a,b)=>{
+    const da = a.isoDate||'0000-00-00', db2 = b.isoDate||'0000-00-00';
+    if (db2 !== da) return db2.localeCompare(da);
+    return b._i - a._i;
+  });
+}
+
+const DAYS = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
+function dateSepLabel(isoDate) {
+  if (!isoDate || isoDate === '0000-00-00') return 'Tanggal tidak diketahui';
+  const d = new Date(isoDate + 'T00:00:00');
+  const today = new Date(); today.setHours(0,0,0,0);
+  const diff = today - d;
+  if (diff === 0) return 'Hari ini · ' + formatDateDisplay(isoDate);
+  if (diff === 86400000) return 'Kemarin · ' + formatDateDisplay(isoDate);
+  return DAYS[d.getDay()] + ', ' + formatDateDisplay(isoDate);
+}
+
+function renderHistory() {
+  const h = document.getElementById('history');
+  const pag = document.getElementById('pagination');
+
+  if (!state.txs.length) {
+    h.innerHTML='<div class="empty">📭 Belum ada transaksi</div>';
+    pag.style.display='none'; return;
+  }
+
+  const sorted = getSortedTxs();
+  const totalPages = Math.ceil(sorted.length / PAGE_SIZE);
+  if (currentPage >= totalPages) currentPage = totalPages - 1;
+  if (currentPage < 0) currentPage = 0;
+
+  const start = currentPage * PAGE_SIZE;
+  const pageTxs = sorted.slice(start, start + PAGE_SIZE);
+
+  // Group this page's txs by date
+  const groups = {};
+  const groupOrder = [];
+  pageTxs.forEach(t => {
+    const key = t.isoDate || '0000-00-00';
+    if (!groups[key]) { groups[key] = []; groupOrder.push(key); }
+    groups[key].push(t);
+  });
+
+  let html = '';
+  groupOrder.forEach(dateKey => {
+    const dayTotal = groups[dateKey].filter(t=>t.type==='expense').reduce((s,t)=>s+t.amount,0);
+    const dayTotalStr = dayTotal > 0 ? '− '+fmt(dayTotal) : '';
+    html += `<div class="date-sep">
+      <div class="date-sep-line"></div>
+      <div class="date-sep-label">${dateSepLabel(dateKey)}</div>
+      ${dayTotalStr ? `<div class="date-sep-total">${dayTotalStr}</div>` : ''}
+      <div class="date-sep-line"></div>
+    </div>`;
+    groups[dateKey].forEach(t => {
+      let amtStr='', meta='';
+      if (t.type==='income') { amtStr='+ '+fmt(t.amount); meta=walletName(t.wallet||'bank'); }
+      else if (t.type==='expense') { amtStr='− '+fmt(t.amount); meta=walletName(t.wallet)+' · '+(t.cat||'Lain-lain'); }
+      else { amtStr=fmt(t.amount); meta=walletName(t.from)+' → '+walletName(t.to); }
+      html += `<div class="tx-item">
+        <div class="tx-dot ${t.type}"></div>
+        <div class="tx-info">
+          <div class="tx-desc">${t.desc}</div>
+          <div class="tx-meta">${meta}</div>
+        </div>
+        <div class="tx-amount ${t.type}">${amtStr}</div>
+        <button class="tx-del" onclick="event.stopPropagation();window.openEditTx(${t._i})" title="Edit" style="color:#aaa;font-size:14px">✏️</button>
+        <button class="tx-del" onclick="event.stopPropagation();window._delTx(${t._i})" title="Hapus">×</button>
+      </div>`;
+    });
+  });
+  h.innerHTML = html;
+
+  // Pagination controls
+  pag.style.display = 'flex';
+  document.getElementById('btn-prev').disabled = currentPage === 0;
+  document.getElementById('btn-next').disabled = currentPage >= totalPages - 1;
+  document.getElementById('page-info').textContent = `Halaman ${currentPage+1} dari ${totalPages} · ${sorted.length} transaksi`;
+}
+
+function renderReport() {
+  document.getElementById('report-month-label').textContent = MONTHS[reportMonth] + ' ' + reportYear;
+  const txs = (state.txs||[]).filter(t => {
+    const d = t.isoDate;
+    if (!d) return false;
+    const [y,m] = d.split('-').map(Number);
+    return y === reportYear && m === reportMonth + 1;
+  });
+
+  const totalIncome = txs.filter(t=>t.type==='income').reduce((s,t)=>s+t.amount,0);
+  const totalExpense = txs.filter(t=>t.type==='expense').reduce((s,t)=>s+t.amount,0);
+  document.getElementById('rep-income').textContent = fmt(totalIncome);
+  document.getElementById('rep-expense').textContent = fmt(totalExpense);
+  const sav = totalIncome - totalExpense;
+  const savEl = document.getElementById('rep-saving');
+  savEl.textContent = fmt(sav);
+  savEl.className = 'report-card-val '+(sav>=0?'saving':'expense');
+
+  ['bank','gopay','cash'].forEach(w => {
+    document.getElementById('rep-'+w).textContent = fmt(txs.filter(t=>t.type==='expense'&&t.wallet===w).reduce((s,t)=>s+t.amount,0));
+  });
+
+  // Per kategori — semua kategori yang ada, meski 0
+  const cats = {};
+  (state.cats||DEFAULT_CATS).forEach(c => cats[c] = 0);
+  txs.filter(t=>t.type==='expense').forEach(t => {
+    const c = t.cat||'Lain-lain';
+    cats[c] = (cats[c]||0) + t.amount;
+  });
+
+  const entries = Object.entries(cats).filter(([,v])=>v>0).sort((a,b)=>b[1]-a[1]);
+
+  // Render chart
+  const chartEl = document.getElementById('rep-chart');
+  if (!entries.length) {
+    chartEl.innerHTML = '<div class="empty" style="padding:1rem">Belum ada data</div>';
+  } else {
+    const maxVal = entries[0][1];
+    chartEl.innerHTML = entries.map(([name,amt]) => {
+      const barW = maxVal > 0 ? Math.round(amt/maxVal*100) : 0;
+      return `<div class="chart-bar-row">
+        <div class="chart-bar-label">${name}</div>
+        <div class="chart-bar-track"><div class="chart-bar-fill" style="width:${barW}%"></div></div>
+        <div class="chart-bar-val">${fmt(amt)}</div>
+      </div>`;
+    }).join('');
+  }
+
+  const catEl = document.getElementById('rep-cats');
+  if (!entries.length) { catEl.innerHTML='<div class="empty">Belum ada pengeluaran bulan ini</div>'; return; }
+  const max = entries[0][1];
+  catEl.innerHTML = entries.map(([name,amt]) => {
+    const pct = totalExpense > 0 ? Math.round(amt/totalExpense*100) : 0;
+    const barW = max > 0 ? Math.round(amt/max*100) : 0;
+    return `<div class="cat-item">
+      <div class="cat-top"><div class="cat-name">${name}</div><div class="cat-amount">${fmt(amt)}</div></div>
+      <div class="cat-bar-bg"><div class="cat-bar" style="width:${barW}%"></div></div>
+      <div class="cat-pct">${pct}% dari total pengeluaran</div>
+    </div>`;
+  }).join('');
+}
+
+function renderKategori() {
+  const cats = state.cats || DEFAULT_CATS;
+  const el = document.getElementById('kat-list');
+  el.innerHTML = cats.map((c,i) => {
+    const isDef = DEFAULT_CATS.includes(c);
+    return `<div class="kat-item${isDef?' default':''}">
+      <span>${c}${isDef?' <small style="font-size:10px;color:#ccc">(bawaan)</small>':''}</span>
+      ${isDef ? '' : `<button class="kat-del" onclick="window._delKat(${i})" title="Hapus">×</button>`}
+    </div>`;
+  }).join('');
+}
+
+function refreshCatDropdown() {
+  const sel = document.getElementById('exp-category');
+  const cur = sel.value;
+  sel.innerHTML = (state.cats||DEFAULT_CATS).map(c => `<option${c===cur?' selected':''}>${c}</option>`).join('');
+}
+
+async function saveState() {
+  saving = true; setSyncStatus('syncing');
+  try { await setDoc(DOC_REF, state); setSyncStatus('ok'); }
+  catch(e) { setSyncStatus('err'); toast('Gagal menyimpan, cek koneksi!'); }
+  saving = false;
+}
+
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 2200);
+}
+
+window.switchPage = function(page) {
+  document.querySelectorAll('.nav-tab').forEach((b,i)=>b.classList.toggle('active',['catat','riwayat','laporan','kategori'][i]===page));
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById('page-'+page).classList.add('active');
+  if (page==='laporan') renderReport();
+  if (page==='riwayat') { currentPage=0; renderHistory(); }
+};
+
+window.switchTab = function(tab) {
+  document.querySelectorAll('.tab').forEach((b,i)=>b.classList.toggle('active',['income','expense','transfer'][i]===tab));
+  ['income','expense','transfer'].forEach(t=>{ document.getElementById('form-'+t).style.display=t===tab?'block':'none'; });
+};
+
+window.changeMonth = function(dir) {
+  reportMonth += dir;
+  if (reportMonth>11){reportMonth=0;reportYear++;}
+  if (reportMonth<0){reportMonth=11;reportYear--;}
+  renderReport();
+};
+
+function getVal(id) { return document.getElementById(id).value.trim(); }
+function getNum(id) { return parseFloat(document.getElementById(id).value)||0; }
+function clearFields(...ids) { ids.forEach(id=>document.getElementById(id).value=''); }
+
+window.addIncome = async function() {
+  const desc = getVal('inc-desc')||'Pemasukan';
+  const amt = getNum('inc-amount');
+  const isoDate = getVal('inc-date');
+  const wallet = getVal('inc-wallet');
+  if (!amt) { toast('Isi jumlah dulu ya!'); return; }
+  if (!isoDate) { toast('Isi tanggal dulu ya!'); return; }
+  state[wallet] += amt;
+  state.txs.push({type:'income', desc, amount:amt, isoDate, wallet});
+  clearFields('inc-desc','inc-amount');
+  render(); await saveState();
+  toast('Pemasukan ditambahkan ke ' + walletName(wallet) + '! 🏦');
+};
+
+window.addExpense = async function() {
+  const desc = getVal('exp-desc')||'Pengeluaran';
+  const amt = getNum('exp-amount');
+  const wallet = getVal('exp-wallet');
+  const cat = getVal('exp-category');
+  const isoDate = getVal('exp-date');
+  if (!amt) { toast('Isi jumlah dulu ya!'); return; }
+  if (!isoDate) { toast('Isi tanggal dulu ya!'); return; }
+  if (state[wallet] < amt) { toast('Saldo '+walletName(wallet)+' tidak cukup!'); return; }
+  state[wallet] -= amt;
+  state.txs.push({type:'expense', desc, amount:amt, wallet, cat, isoDate});
+  clearFields('exp-desc','exp-amount');
+  render(); await saveState();
+  toast('Dicatat dari '+walletName(wallet)+'!');
+};
+
+window.addTransfer = async function() {
+  const from = getVal('tr-from'), to = getVal('tr-to');
+  const amt = getNum('tr-amount');
+  const isoDate = getVal('tr-date');
+  const desc = getVal('tr-desc')||(walletName(from)+' → '+walletName(to));
+  if (from===to) { toast('Dompet asal dan tujuan sama!'); return; }
+  if (!amt) { toast('Isi jumlah dulu ya!'); return; }
+  if (!isoDate) { toast('Isi tanggal dulu ya!'); return; }
+  if (state[from] < amt) { toast('Saldo '+walletName(from)+' tidak cukup!'); return; }
+  state[from] -= amt; state[to] += amt;
+  state.txs.push({type:'transfer', desc, amount:amt, from, to, isoDate});
+  clearFields('tr-desc','tr-amount');
+  render(); await saveState();
+  toast('Dipindahkan ke '+walletName(to)+'! ✓');
+};
+
+window._delTx = async function(i) {
+  const t = state.txs[i];
+  if (t.type==='income') state.bank -= t.amount;
+  else if (t.type==='expense') state[t.wallet] += t.amount;
+  else { state[t.from] += t.amount; state[t.to] -= t.amount; }
+  state.txs.splice(i,1);
+  render(); await saveState();
+  toast('Transaksi dihapus');
+};
+
+window.addKategori = async function() {
+  const val = document.getElementById('new-kat').value.trim();
+  if (!val) { toast('Isi nama kategori dulu!'); return; }
+  if ((state.cats||[]).includes(val)) { toast('Kategori sudah ada!'); return; }
+  if (!state.cats) state.cats = [...DEFAULT_CATS];
+  state.cats.push(val);
+  document.getElementById('new-kat').value = '';
+  render(); await saveState();
+  toast('Kategori "'+val+'" ditambahkan!');
+};
+
+window._delKat = async function(i) {
+  const name = state.cats[i];
+  if (DEFAULT_CATS.includes(name)) return;
+  if (!confirm('Hapus kategori "'+name+'"?')) return;
+  state.cats.splice(i,1);
+  render(); await saveState();
+  toast('Kategori dihapus');
+};
+
+
+
+let editTxIndex = -1;
+
+window.openEditTx = function(i) {
+  const t = state.txs[i];
+  editTxIndex = i;
+  document.getElementById('etx-date').value = t.isoDate || '';
+  document.getElementById('etx-amount').value = t.amount || '';
+  document.getElementById('etx-desc').value = t.desc || '';
+
+  // Show/hide fields based on type
+  const walletRow = document.getElementById('etx-wallet-row');
+  const catRow = document.getElementById('etx-cat-row');
+  const fromRow = document.getElementById('etx-from-row');
+  const toRow = document.getElementById('etx-to-row');
+
+  if (t.type === 'income') {
+    walletRow.style.display = 'block';
+    catRow.style.display = 'none';
+    fromRow.style.display = 'none';
+    toRow.style.display = 'none';
+    document.getElementById('etx-wallet').value = t.wallet || 'bank';
+  } else if (t.type === 'expense') {
+    walletRow.style.display = 'block';
+    catRow.style.display = 'block';
+    fromRow.style.display = 'none';
+    toRow.style.display = 'none';
+    document.getElementById('etx-wallet').value = t.wallet || 'bank';
+    const catSel = document.getElementById('etx-category');
+    catSel.innerHTML = (state.cats||DEFAULT_CATS).map(c=>`<option${c===t.cat?' selected':''}>${c}</option>`).join('');
+  } else {
+    walletRow.style.display = 'none';
+    catRow.style.display = 'none';
+    fromRow.style.display = 'block';
+    toRow.style.display = 'block';
+    document.getElementById('etx-from').value = t.from || 'bank';
+    document.getElementById('etx-to').value = t.to || 'gopay';
+  }
+
+  document.getElementById('edit-tx-modal').classList.add('show');
+};
+
+window.saveEditTx = async function() {
+  if (editTxIndex < 0) return;
+  const t = state.txs[editTxIndex];
+  const newAmt = getNum('etx-amount');
+  const newDate = getVal('etx-date');
+  const newDesc = getVal('etx-desc') || t.desc;
+  if (!newAmt) { toast('Isi jumlah dulu!'); return; }
+  if (!newDate) { toast('Isi tanggal dulu!'); return; }
+
+  // Reverse old effect on balances
+  if (t.type==='income') state[t.wallet||'bank'] -= t.amount;
+  else if (t.type==='expense') state[t.wallet] += t.amount;
+  else { state[t.from] += t.amount; state[t.to] -= t.amount; }
+
+  // Apply new values
+  if (t.type==='income') {
+    const newWallet = getVal('etx-wallet');
+    state[newWallet] += newAmt;
+    state.txs[editTxIndex] = {...t, amount:newAmt, isoDate:newDate, desc:newDesc, wallet:newWallet};
+  } else if (t.type==='expense') {
+    const newWallet = getVal('etx-wallet');
+    const newCat = getVal('etx-category');
+    if (state[newWallet] < newAmt) { 
+      // re-apply old
+      state[t.wallet] -= t.amount;
+      toast('Saldo ' + walletName(newWallet) + ' tidak cukup!'); return; 
+    }
+    state[newWallet] -= newAmt;
+    state.txs[editTxIndex] = {...t, amount:newAmt, isoDate:newDate, desc:newDesc, wallet:newWallet, cat:newCat};
+  } else {
+    const newFrom = getVal('etx-from');
+    const newTo = getVal('etx-to');
+    if (newFrom === newTo) { state[t.from] -= t.amount; state[t.to] += t.amount; toast('Dompet asal dan tujuan sama!'); return; }
+    if (state[newFrom] < newAmt) { state[t.from] -= t.amount; state[t.to] += t.amount; toast('Saldo tidak cukup!'); return; }
+    state[newFrom] -= newAmt;
+    state[newTo] += newAmt;
+    state.txs[editTxIndex] = {...t, amount:newAmt, isoDate:newDate, desc:newDesc, from:newFrom, to:newTo};
+  }
+
+  document.getElementById('edit-tx-modal').classList.remove('show');
+  editTxIndex = -1;
+  render(); await saveState();
+  toast('Transaksi diperbarui! ✓');
+};
+
+window.closeEditTxModal = function(e) {
+  if (e.target === document.getElementById('edit-tx-modal')) {
+    document.getElementById('edit-tx-modal').classList.remove('show');
+  }
+};
+
+window.changePage = function(dir) { currentPage += dir; renderHistory(); window.scrollTo(0,0); };
+
+window.openEditModal = function(i) {
+  const t = state.txs[i];
+  if (t.type !== 'expense') return;
+  document.getElementById('modal-tx-desc').textContent = t.desc + ' · ' + fmt(t.amount);
+  const cats = state.cats || DEFAULT_CATS;
+  document.getElementById('modal-cats').innerHTML = cats.map(c =>
+    `<button class="modal-cat-btn${c===(t.cat||'')?' selected':''}" onclick="saveEditCat(${i},'${c.replace(/'/g,"\'")}')">
+      ${c}${c===(t.cat||'') ? ' ✓' : ''}
+    </button>`
+  ).join('');
+  document.getElementById('edit-modal').classList.add('show');
+};
+
+window.saveEditCat = async function(i, cat) {
+  state.txs[i].cat = cat;
+  closeModal();
+  render();
+  await saveState();
+  toast('Kategori diperbarui!');
+};
+
+window.closeModal = function() {
+  document.getElementById('edit-modal').classList.remove('show');
+};
+
+window.closeEditModal = function(e) {
+  if (e.target === document.getElementById('edit-modal')) closeModal();
+};
+
+window.exportData = function() {
+  const now = new Date();
+  const dateStr = now.toLocaleDateString('id-ID',{day:'2-digit',month:'short',year:'numeric'}).replace(/ /g,'-');
+  const filename = 'dompet-backup-' + dateStr + '.json';
+  const json = JSON.stringify(state, null, 2);
+  const blob = new Blob([json], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+  toast('Data berhasil di-export! 📁');
+};
+
+window.importData = async function(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  try {
+    const text = await file.text();
+    const data = JSON.parse(text);
+    if (!('bank' in data) || !('txs' in data)) {
+      toast('File tidak valid!'); return;
+    }
+    if (!confirm('Import akan mengganti semua data saat ini. Lanjut?')) {
+      e.target.value = ''; return;
+    }
+    state = data;
+    if (!state.cats) state.cats = [...DEFAULT_CATS];
+    render();
+    await saveState();
+    toast('Data berhasil di-import! ✓');
+  } catch(err) {
+    toast('Gagal import, file tidak valid!');
+  }
+  e.target.value = '';
+};
+
+window.resetAll = async function() {
+  if (!confirm('Reset semua data? Tidak bisa dibatalkan.')) return;
+  state = {bank:0, gopay:0, cash:0, txs:[], cats:[...DEFAULT_CATS]};
+  render(); await saveState();
+  toast('Data direset');
+};
+
+onSnapshot(DOC_REF, (snap) => {
+  if (saving) return;
+  if (snap.exists()) {
+    state = snap.data();
+    if (!state.txs) state.txs = [];
+    if (!state.cats) state.cats = [...DEFAULT_CATS];
+  }
+  setSyncStatus('ok');
+  render();
+  setDefaultDates();
+}, () => { setSyncStatus('err'); });
+
+setDefaultDates();
+</script>
+</body>
+</html>
