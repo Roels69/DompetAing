@@ -195,6 +195,65 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 
 /* Daily total in history */
 .date-sep-total{font-size:11px;font-weight:600;color:#E24B4A;white-space:nowrap;margin-left:4px}
+
+/* Search bar */
+.search-wrap{position:relative;margin-bottom:10px}
+.search-wrap input{width:100%;padding:10px 14px 10px 36px;border:none;border-radius:10px;background:#f2f2f0;font-size:14px;font-family:inherit;outline:none;transition:background .15s}
+.search-wrap input:focus{background:#eaf2fb}
+.search-wrap::before{content:'🔍';position:absolute;left:11px;top:50%;transform:translateY(-50%);font-size:13px;pointer-events:none}
+.search-clear{position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;color:#bbb;cursor:pointer;font-size:16px;padding:2px;display:none}
+.search-clear.show{display:block}
+
+/* Hutang */
+.hutang-card{background:#fff;border:1px solid #ebebeb;border-radius:14px;padding:1.125rem;margin-bottom:10px;box-shadow:0 1px 4px rgba(0,0,0,.04)}
+.hutang-card.lunas{opacity:.5}
+.hutang-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px}
+.hutang-nama{font-size:15px;font-weight:600}
+.hutang-badge{font-size:11px;padding:2px 8px;border-radius:20px;font-weight:500}
+.hutang-badge.aktif{background:#fff0f0;color:#E24B4A}
+.hutang-badge.lunas{background:#e8f5e9;color:#1D9E75}
+.hutang-total{font-size:13px;color:#888;margin-bottom:4px}
+.hutang-sisa{font-size:18px;font-weight:700;color:#E24B4A;margin-bottom:2px}
+.hutang-sisa.lunas{color:#1D9E75}
+.hutang-note{font-size:11px;color:#bbb;margin-bottom:10px}
+.hutang-progress-bg{height:6px;background:#f0f0f0;border-radius:3px;overflow:hidden;margin-bottom:10px}
+.hutang-progress-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,#1D9E75,#4ade80);transition:width .4s}
+.hutang-payments{margin-bottom:10px}
+.hutang-pay-item{display:flex;justify-content:space-between;align-items:center;font-size:12px;color:#666;padding:4px 0;border-bottom:1px solid #f5f5f5}
+.hutang-pay-item:last-child{border-bottom:none}
+.hutang-pay-del{background:none;border:none;color:#ddd;cursor:pointer;font-size:14px;padding:0 4px}
+.hutang-pay-del:hover{color:#E24B4A}
+.hutang-actions{display:flex;gap:8px}
+.btn-bayar{flex:1;padding:9px;border:none;border-radius:8px;background:#1F3864;color:#fff;font-size:13px;font-weight:500;cursor:pointer;font-family:inherit}
+.btn-bayar:hover{background:#2E75B6}
+.btn-hapus-hutang{padding:9px 14px;border:1px solid #f0f0f0;border-radius:8px;background:#fff;color:#ccc;font-size:13px;cursor:pointer;font-family:inherit}
+.btn-hapus-hutang:hover{color:#E24B4A;border-color:#E24B4A}
+/* Bayar modal */
+.bayar-modal{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:1000;display:flex;align-items:flex-end;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s}
+.bayar-modal.show{opacity:1;pointer-events:all}
+.bayar-box{background:#fff;border-radius:16px 16px 0 0;padding:1.25rem;width:100%;max-width:480px;transform:translateY(100%);transition:transform .25s}
+.bayar-modal.show .bayar-box{transform:translateY(0)}
+.bayar-title{font-size:15px;font-weight:600;margin-bottom:4px}
+.bayar-sub{font-size:12px;color:#999;margin-bottom:14px}
+
+/* PIN Lock */
+.pin-overlay{position:fixed;inset:0;background:#1F3864;z-index:2000;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;opacity:0;pointer-events:none;transition:opacity .2s}
+.pin-overlay.show{opacity:1;pointer-events:all}
+.pin-logo{font-size:40px}
+.pin-title{font-size:18px;font-weight:600;color:#fff}
+.pin-sub{font-size:13px;color:rgba(255,255,255,.6);margin-top:-12px}
+.pin-dots{display:flex;gap:14px;margin:8px 0}
+.pin-dot{width:14px;height:14px;border-radius:50%;border:2px solid rgba(255,255,255,.4);background:transparent;transition:background .15s}
+.pin-dot.filled{background:#fff;border-color:#fff}
+.pin-error{font-size:13px;color:#ff8a8a;min-height:20px}
+.pin-keypad{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;width:240px}
+.pin-key{padding:18px;border:none;border-radius:12px;background:rgba(255,255,255,.12);color:#fff;font-size:20px;font-weight:500;cursor:pointer;font-family:inherit;transition:background .15s;text-align:center}
+.pin-key:hover{background:rgba(255,255,255,.2)}
+.pin-key:active{background:rgba(255,255,255,.3);transform:scale(.95)}
+.pin-key.del{font-size:16px}
+.pin-key.empty{background:transparent;cursor:default}
+.pin-setup-wrap{display:flex;flex-direction:column;align-items:center;gap:16px}
+.pin-setup-step{font-size:13px;color:rgba(255,255,255,.7);text-align:center}
 </style>
 </head>
 <body>
@@ -236,6 +295,7 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     <button class="nav-tab" onclick="switchPage('riwayat')">📋 Riwayat</button>
     <button class="nav-tab" onclick="switchPage('laporan')">📊 Laporan</button>
     <button class="nav-tab" onclick="switchPage('kategori')">🏷 Kategori</button>
+    <button class="nav-tab" onclick="openHutangWithPin()">💳 Hutang</button>
   </div>
 
   <!-- CATAT -->
@@ -309,6 +369,10 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 
   <!-- RIWAYAT -->
   <div class="page" id="page-riwayat">
+    <div class="search-wrap">
+      <input type="text" id="search-input" placeholder="Cari transaksi..." oninput="onSearch()" autocomplete="off">
+      <button class="search-clear" id="search-clear" onclick="clearSearch()">×</button>
+    </div>
     <div class="section-label">Semua transaksi</div>
     <div class="history-list" id="history"><div class="loading">⏳ Memuat data...</div></div>
     <div class="pagination" id="pagination" style="display:none">
@@ -374,6 +438,22 @@ input[type="date"]::-webkit-calendar-picker-indicator {
       <div class="backup-info">JSON untuk backup lengkap · CSV bisa dibuka di Excel</div>
     </div>
   </div>
+  <!-- HUTANG -->
+  <div class="page" id="page-hutang">
+    <div class="form-card">
+      <div class="section-label" style="margin-top:0">Tambah hutang baru</div>
+      <div class="form-row"><label>Kepada siapa</label><input type="text" id="htg-nama" placeholder="Nama orang/tempat"></div>
+      <div class="form-row"><label>Total hutang (Rp)</label><div class="input-rp-wrap"><input type="number" id="htg-total" placeholder="0" min="0" inputmode="numeric"></div></div>
+      <div class="form-row"><label>Tanggal hutang</label><input type="date" id="htg-date"></div>
+      <div class="form-row"><label>Catatan (opsional)</label><input type="text" id="htg-note" placeholder="Misal: hutang motor, dll"></div>
+      <button class="btn-submit" onclick="addHutang()">+ Catat Hutang</button>
+    </div>
+
+    <div style="display:flex;justify-content:flex-end;margin-bottom:8px"><button onclick="resetHutangPin()" style="background:none;border:none;font-size:11px;color:#bbb;cursor:pointer;font-family:inherit">🔑 Reset PIN</button></div>
+    <div class="section-label">Daftar hutang</div>
+    <div id="hutang-list"><div class="empty">Belum ada hutang tercatat 🎉</div></div>
+  </div>
+
 </div>
 
 
@@ -401,6 +481,21 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     <div class="edit-btn-row">
       <button class="btn-cancel-edit" onclick="document.getElementById('edit-tx-modal').classList.remove('show')">Batal</button>
       <button class="btn-save-edit" onclick="saveEditTx()">Simpan</button>
+    </div>
+  </div>
+</div>
+
+<!-- Bayar Hutang Modal -->
+<div class="bayar-modal" id="bayar-modal" onclick="closeBayarModal(event)">
+  <div class="bayar-box">
+    <div class="bayar-title">💳 Catat Pembayaran</div>
+    <div class="bayar-sub" id="bayar-sub">Hutang kepada —</div>
+    <div class="form-row"><label>Jumlah dibayar (Rp)</label><div class="input-rp-wrap"><input type="number" id="bayar-amount" placeholder="0" min="0" inputmode="numeric"></div></div>
+    <div class="form-row"><label>Tanggal bayar</label><input type="date" id="bayar-date"></div>
+    <div class="form-row"><label>Catatan (opsional)</label><input type="text" id="bayar-note" placeholder="Misal: bayar cicilan bulan Juni"></div>
+    <div class="edit-btn-row">
+      <button class="btn-cancel-edit" onclick="document.getElementById('bayar-modal').classList.remove('show')">Batal</button>
+      <button class="btn-save-edit" onclick="saveBayar()">Simpan</button>
     </div>
   </div>
 </div>
@@ -435,9 +530,10 @@ const db = getFirestore(app);
 const DOC_REF = doc(db, "keuangan", "data");
 
 const DEFAULT_CATS = ['Makan & Minum','Transport','Belanja','Kost/Sewa','Kesehatan','Hiburan','Lain-lain'];
-let state = {bank:0, gopay:0, cash:0, txs:[], cats: [...DEFAULT_CATS]};
+let state = {bank:0, gopay:0, cash:0, txs:[], cats: [...DEFAULT_CATS], hutangs:[]};
 let currentPage = 0;
 const PAGE_SIZE = 10;
+let searchQuery = '';
 let saving = false;
 let reportYear = new Date().getFullYear();
 let reportMonth = new Date().getMonth();
@@ -455,6 +551,8 @@ function setDefaultDates() {
     const el = document.getElementById(id);
     if (el && !el.value) el.value = now;
   });
+  const htgDate = document.getElementById('htg-date');
+  if (htgDate && !htgDate.value) htgDate.value = today;
 }
 
 function setSyncStatus(s) {
@@ -496,6 +594,7 @@ function render() {
   renderReport();
   renderKategori();
   refreshCatDropdown();
+  renderHutang();
 }
 
 function getSortedTxs() {
@@ -526,7 +625,8 @@ function renderHistory() {
     pag.style.display='none'; return;
   }
 
-  const sorted = getSortedTxs();
+  const allSorted = getSortedTxs();
+  const sorted = searchQuery ? allSorted.filter(t => (t.desc||'').toLowerCase().includes(searchQuery) || (t.cat||'').toLowerCase().includes(searchQuery)) : allSorted;
   const totalPages = Math.ceil(sorted.length / PAGE_SIZE);
   if (currentPage >= totalPages) currentPage = totalPages - 1;
   if (currentPage < 0) currentPage = 0;
@@ -577,7 +677,8 @@ function renderHistory() {
   pag.style.display = 'flex';
   document.getElementById('btn-prev').disabled = currentPage === 0;
   document.getElementById('btn-next').disabled = currentPage >= totalPages - 1;
-  document.getElementById('page-info').textContent = `Halaman ${currentPage+1} dari ${totalPages} · ${sorted.length} transaksi`;
+  const infoText = searchQuery ? `${sorted.length} hasil · Hal ${currentPage+1}/${totalPages}` : `Halaman ${currentPage+1} dari ${totalPages} · ${sorted.length} transaksi`;
+  document.getElementById('page-info').textContent = infoText;
 }
 
 function renderReport() {
@@ -674,11 +775,13 @@ function toast(msg) {
 }
 
 window.switchPage = function(page) {
-  document.querySelectorAll('.nav-tab').forEach((b,i)=>b.classList.toggle('active',['catat','riwayat','laporan','kategori'][i]===page));
+  document.querySelectorAll('.nav-tab').forEach((b,i)=>b.classList.toggle('active',['catat','riwayat','laporan','kategori','hutang'][i]===page));
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.getElementById('page-'+page).classList.add('active');
   if (page==='laporan') renderReport();
-  if (page==='riwayat') { currentPage=0; renderHistory(); }
+  if (page==='hutang') renderHutang();
+  if (page!=='hutang') pinUnlocked = false;
+  if (page==='riwayat') { currentPage=0; searchQuery=''; const si=document.getElementById('search-input'); if(si) si.value=''; const sc=document.getElementById('search-clear'); if(sc) sc.classList.remove('show'); renderHistory(); }
 };
 
 window.switchTab = function(tab) {
@@ -870,6 +973,23 @@ window.closeEditTxModal = function(e) {
   }
 };
 
+
+window.onSearch = function() {
+  searchQuery = document.getElementById('search-input').value.trim().toLowerCase();
+  const clearBtn = document.getElementById('search-clear');
+  clearBtn.classList.toggle('show', searchQuery.length > 0);
+  currentPage = 0;
+  renderHistory();
+};
+
+window.clearSearch = function() {
+  document.getElementById('search-input').value = '';
+  searchQuery = '';
+  document.getElementById('search-clear').classList.remove('show');
+  currentPage = 0;
+  renderHistory();
+};
+
 window.changePage = function(dir) { currentPage += dir; renderHistory(); window.scrollTo(0,0); };
 
 window.openEditModal = function(i) {
@@ -952,6 +1072,7 @@ window.importData = async function(e) {
     }
     state = data;
     if (!state.cats) state.cats = [...DEFAULT_CATS];
+    if (!state.hutangs) state.hutangs = [];
     render();
     await saveState();
     toast('Data berhasil di-import! ✓');
@@ -959,6 +1080,214 @@ window.importData = async function(e) {
     toast('Gagal import, file tidak valid!');
   }
   e.target.value = '';
+};
+
+
+// ── PIN ──────────────────────────────────────────────
+let pinBuffer = '';
+let pinMode = 'verify'; // 'verify' | 'setup1' | 'setup2'
+let pinSetupTemp = '';
+let pinUnlocked = false;
+
+function getPin() { return state.hutangPin || null; }
+
+function updatePinDots() {
+  for (let i=0;i<4;i++) {
+    document.getElementById('pd'+i).classList.toggle('filled', i < pinBuffer.length);
+  }
+}
+
+window.pinKey = function(k) {
+  if (pinBuffer.length >= 4) return;
+  pinBuffer += k;
+  updatePinDots();
+  document.getElementById('pin-error').textContent = '';
+  if (pinBuffer.length === 4) {
+    setTimeout(() => processPinInput(), 150);
+  }
+};
+
+window.pinDel = function() {
+  pinBuffer = pinBuffer.slice(0,-1);
+  updatePinDots();
+};
+
+function processPinInput() {
+  if (pinMode === 'verify') {
+    if (pinBuffer === getPin()) {
+      pinUnlocked = true;
+      document.getElementById('pin-overlay').classList.remove('show');
+      switchPage('hutang');
+    } else {
+      document.getElementById('pin-error').textContent = 'PIN salah, coba lagi';
+      pinBuffer = ''; updatePinDots();
+    }
+  } else if (pinMode === 'setup1') {
+    pinSetupTemp = pinBuffer;
+    pinBuffer = '';
+    updatePinDots();
+    document.getElementById('pin-title').textContent = 'Konfirmasi PIN';
+    document.getElementById('pin-sub').textContent = 'Masukkan PIN sekali lagi';
+    pinMode = 'setup2';
+  } else if (pinMode === 'setup2') {
+    if (pinBuffer === pinSetupTemp) {
+      state.hutangPin = pinBuffer;
+      pinBuffer = ''; pinSetupTemp = '';
+      document.getElementById('pin-overlay').classList.remove('show');
+      saveState();
+      toast('PIN berhasil dibuat! 🔒');
+      switchPage('hutang');
+    } else {
+      document.getElementById('pin-error').textContent = 'PIN tidak cocok, mulai lagi';
+      pinBuffer = ''; pinSetupTemp = ''; pinMode = 'setup1';
+      updatePinDots();
+      document.getElementById('pin-title').textContent = 'Buat PIN Baru';
+      document.getElementById('pin-sub').textContent = 'Masukkan 4 digit PIN';
+    }
+  }
+}
+
+window.cancelPin = function() {
+  document.getElementById('pin-overlay').classList.remove('show');
+  pinBuffer = ''; updatePinDots();
+};
+
+window.openHutangWithPin = function() {
+  pinBuffer = ''; updatePinDots();
+  document.getElementById('pin-error').textContent = '';
+  if (!getPin()) {
+    // First time - setup PIN
+    pinMode = 'setup1';
+    document.getElementById('pin-title').textContent = 'Buat PIN Baru';
+    document.getElementById('pin-sub').textContent = 'Masukkan 4 digit PIN untuk Tab Hutang';
+  } else if (pinUnlocked) {
+    switchPage('hutang');
+    return;
+  } else {
+    pinMode = 'verify';
+    document.getElementById('pin-title').textContent = 'Masukkan PIN';
+    document.getElementById('pin-sub').textContent = 'Tab Hutang dilindungi PIN';
+  }
+  document.getElementById('pin-overlay').classList.add('show');
+};
+
+window.resetHutangPin = async function() {
+  if (!confirm('Reset PIN hutang? Kamu perlu buat PIN baru.')) return;
+  state.hutangPin = null;
+  pinUnlocked = false;
+  await saveState();
+  toast('PIN direset');
+};
+
+// ── HUTANG ──────────────────────────────────────────
+let bayarHutangIdx = -1;
+
+function renderHutang() {
+  const el = document.getElementById('hutang-list');
+  const hutangs = state.hutangs || [];
+  if (!hutangs.length) { el.innerHTML='<div class="empty">Belum ada hutang tercatat 🎉</div>'; return; }
+
+  // Sort: aktif dulu, lalu lunas
+  const sorted = [...hutangs].map((h,i)=>({...h,_i:i})).sort((a,b)=>{
+    const aLunas = a.sisa<=0, bLunas = b.sisa<=0;
+    if (aLunas !== bLunas) return aLunas ? 1 : -1;
+    return 0;
+  });
+
+  el.innerHTML = sorted.map(h => {
+    const lunas = h.sisa <= 0;
+    const pct = Math.min(100, Math.round((1 - h.sisa/h.total)*100));
+    const payments = (h.payments||[]).slice().reverse();
+    const payHtml = payments.length ? payments.map((p,pi) => {
+      const realPi = (h.payments.length-1-pi);
+      return `<div class="hutang-pay-item">
+        <span>${p.date} · ${p.note||'Pembayaran'}</span>
+        <span style="display:flex;align-items:center;gap:6px">
+          <strong>− ${Math.round(p.amount).toLocaleString('id-ID')}</strong>
+          <button class="hutang-pay-del" onclick="delPayment(${h._i},${realPi})">×</button>
+        </span>
+      </div>`;
+    }).join('') : '';
+
+    return `<div class="hutang-card${lunas?' lunas':''}">
+      <div class="hutang-header">
+        <div class="hutang-nama">${h.nama}</div>
+        <div class="hutang-badge ${lunas?'lunas':'aktif'}">${lunas?'✓ Lunas':'Belum lunas'}</div>
+      </div>
+      <div class="hutang-total">Total: Rp ${Math.round(h.total).toLocaleString('id-ID')} · ${h.date||''}</div>
+      <div class="hutang-sisa${lunas?' lunas':''}">Sisa: Rp ${Math.max(0,Math.round(h.sisa)).toLocaleString('id-ID')}</div>
+      ${h.note?`<div class="hutang-note">${h.note}</div>`:''}
+      <div class="hutang-progress-bg"><div class="hutang-progress-fill" style="width:${pct}%"></div></div>
+      ${payHtml ? `<div class="hutang-payments">${payHtml}</div>` : ''}
+      <div class="hutang-actions">
+        ${!lunas?`<button class="btn-bayar" onclick="openBayar(${h._i})">+ Catat Pembayaran</button>`:''}
+        <button class="btn-hapus-hutang" onclick="delHutang(${h._i})">🗑</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+window.addHutang = async function() {
+  const nama = getVal('htg-nama');
+  const total = getNum('htg-total');
+  const date = getVal('htg-date');
+  const note = getVal('htg-note');
+  if (!nama) { toast('Isi nama dulu ya!'); return; }
+  if (!total) { toast('Isi total hutang dulu!'); return; }
+  if (!state.hutangs) state.hutangs = [];
+  state.hutangs.push({nama, total, sisa:total, date, note, payments:[]});
+  document.getElementById('htg-nama').value='';
+  document.getElementById('htg-total').value='';
+  document.getElementById('htg-note').value='';
+  renderHutang(); await saveState();
+  toast('Hutang dicatat!');
+};
+
+window.openBayar = function(i) {
+  bayarHutangIdx = i;
+  const h = state.hutangs[i];
+  document.getElementById('bayar-sub').textContent = 'Hutang kepada '+h.nama+' · Sisa Rp '+Math.round(h.sisa).toLocaleString('id-ID');
+  document.getElementById('bayar-amount').value = '';
+  document.getElementById('bayar-note').value = '';
+  document.getElementById('bayar-date').value = new Date().toISOString().split('T')[0];
+  document.getElementById('bayar-modal').classList.add('show');
+};
+
+window.saveBayar = async function() {
+  if (bayarHutangIdx < 0) return;
+  const amt = getNum('bayar-amount');
+  const date = getVal('bayar-date');
+  const note = getVal('bayar-note') || 'Pembayaran';
+  if (!amt) { toast('Isi jumlah pembayaran!'); return; }
+  const h = state.hutangs[bayarHutangIdx];
+  if (amt > h.sisa) { toast('Jumlah melebihi sisa hutang!'); return; }
+  h.sisa -= amt;
+  h.payments.push({amount:amt, date, note});
+  document.getElementById('bayar-modal').classList.remove('show');
+  bayarHutangIdx = -1;
+  renderHutang(); await saveState();
+  toast(h.sisa<=0 ? 'Hutang lunas! 🎉' : 'Pembayaran dicatat!');
+};
+
+window.delPayment = async function(hi, pi) {
+  if (!confirm('Hapus catatan pembayaran ini?')) return;
+  const h = state.hutangs[hi];
+  h.sisa += h.payments[pi].amount;
+  h.payments.splice(pi,1);
+  renderHutang(); await saveState();
+  toast('Pembayaran dihapus');
+};
+
+window.delHutang = async function(i) {
+  if (!confirm('Hapus hutang ini?')) return;
+  state.hutangs.splice(i,1);
+  renderHutang(); await saveState();
+  toast('Hutang dihapus');
+};
+
+window.closeBayarModal = function(e) {
+  if (e.target === document.getElementById('bayar-modal'))
+    document.getElementById('bayar-modal').classList.remove('show');
 };
 
 window.resetAll = async function() {
@@ -974,6 +1303,7 @@ onSnapshot(DOC_REF, (snap) => {
     state = snap.data();
     if (!state.txs) state.txs = [];
     if (!state.cats) state.cats = [...DEFAULT_CATS];
+    if (!state.hutangs) state.hutangs = [];
   }
   setSyncStatus('ok');
   render();
@@ -982,5 +1312,35 @@ onSnapshot(DOC_REF, (snap) => {
 
 setDefaultDates();
 </script>
+
+<!-- PIN Overlay -->
+<div class="pin-overlay" id="pin-overlay">
+  <div class="pin-logo">🔒</div>
+  <div class="pin-title" id="pin-title">Masukkan PIN</div>
+  <div class="pin-sub" id="pin-sub">Tab Hutang dilindungi PIN</div>
+  <div class="pin-dots" id="pin-dots">
+    <div class="pin-dot" id="pd0"></div>
+    <div class="pin-dot" id="pd1"></div>
+    <div class="pin-dot" id="pd2"></div>
+    <div class="pin-dot" id="pd3"></div>
+  </div>
+  <div class="pin-error" id="pin-error"></div>
+  <div class="pin-keypad">
+    <button class="pin-key" onclick="pinKey('1')">1</button>
+    <button class="pin-key" onclick="pinKey('2')">2</button>
+    <button class="pin-key" onclick="pinKey('3')">3</button>
+    <button class="pin-key" onclick="pinKey('4')">4</button>
+    <button class="pin-key" onclick="pinKey('5')">5</button>
+    <button class="pin-key" onclick="pinKey('6')">6</button>
+    <button class="pin-key" onclick="pinKey('7')">7</button>
+    <button class="pin-key" onclick="pinKey('8')">8</button>
+    <button class="pin-key" onclick="pinKey('9')">9</button>
+    <button class="pin-key empty"></button>
+    <button class="pin-key" onclick="pinKey('0')">0</button>
+    <button class="pin-key del" onclick="pinDel()">⌫</button>
+  </div>
+  <button style="background:none;border:none;color:rgba(255,255,255,.4);font-size:12px;cursor:pointer;margin-top:8px;font-family:inherit" onclick="cancelPin()">Batal</button>
+</div>
+
 </body>
 </html>
