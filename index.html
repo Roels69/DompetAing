@@ -18,14 +18,14 @@ body{font-family:system-ui,-apple-system,sans-serif;background:#f5f5f0;color:#1a
 .sync-dot.err{background:#f87171}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
 .container{max-width:480px;margin:0 auto;padding:1rem}
-.wallets{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:1rem}
-.wallet-card{background:#fff;border-radius:12px;padding:.875rem;text-align:center;border:1px solid #e5e5e5}
+.wallets{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:1rem}
+.wallet-card{background:#fff;border-radius:12px;padding:.7rem .5rem;text-align:center;border:1px solid #e5e5e5}
 .wallet-card.bank{border-top:3px solid #378ADD}
 .wallet-card.gopay{border-top:3px solid #1D9E75}
 .wallet-card.cash{border-top:3px solid #BA7517}
 .wallet-icon{font-size:20px;margin-bottom:4px}
 .wallet-name{font-size:11px;color:#888;margin-bottom:3px}
-.wallet-balance{font-size:15px;font-weight:600;word-break:break-all}
+.wallet-balance{font-size:13px;font-weight:600;word-break:break-all}
 .wallet-balance.bank{color:#185FA5}
 .wallet-balance.gopay{color:#0F6E56}
 .wallet-balance.cash{color:#854F0B}
@@ -254,6 +254,39 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 .pin-key.empty{background:transparent;cursor:default}
 .pin-setup-wrap{display:flex;flex-direction:column;align-items:center;gap:16px}
 .pin-setup-step{font-size:13px;color:rgba(255,255,255,.7);text-align:center}
+
+/* Tabungan */
+.tabungan-card{background:#fff;border:1px solid #ebebeb;border-radius:14px;padding:1.125rem;margin-bottom:10px;box-shadow:0 1px 4px rgba(0,0,0,.04)}
+.tabungan-card.tercapai{border-color:#1D9E75}
+.tabungan-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px}
+.tabungan-nama{font-size:15px;font-weight:600}
+.tabungan-badge{font-size:11px;padding:2px 8px;border-radius:20px;font-weight:500}
+.tabungan-badge.progress{background:#eaf2fb;color:#185FA5}
+.tabungan-badge.tercapai{background:#e8f5e9;color:#1D9E75}
+.tabungan-amount-row{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px}
+.tabungan-current{font-size:18px;font-weight:700;color:#185FA5}
+.tabungan-current.tercapai{color:#1D9E75}
+.tabungan-target{font-size:12px;color:#999}
+.tabungan-deadline{font-size:11px;color:#bbb;margin-bottom:10px}
+.tabungan-progress-bg{height:8px;background:#f0f0f0;border-radius:4px;overflow:hidden;margin-bottom:6px}
+.tabungan-progress-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,#378ADD,#185FA5);transition:width .4s}
+.tabungan-progress-fill.tercapai{background:linear-gradient(90deg,#1D9E75,#4ade80)}
+.tabungan-pct{font-size:11px;color:#aaa;text-align:right;margin-bottom:10px}
+.tabungan-note{font-size:11px;color:#bbb;margin-bottom:10px}
+.tabungan-history{margin-bottom:10px}
+.tabungan-actions{display:flex;gap:8px}
+.btn-nabung{flex:1;padding:9px;border:none;border-radius:8px;background:#185FA5;color:#fff;font-size:13px;font-weight:500;cursor:pointer;font-family:inherit}
+.btn-nabung:hover{background:#378ADD}
+/* Nabung modal */
+.nabung-modal{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:1000;display:flex;align-items:flex-end;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s}
+.nabung-modal.show{opacity:1;pointer-events:all}
+.nabung-box{background:#fff;border-radius:16px 16px 0 0;padding:1.25rem;width:100%;max-width:480px;transform:translateY(100%);transition:transform .25s}
+.nabung-modal.show .nabung-box{transform:translateY(0)}
+.nabung-title{font-size:15px;font-weight:600;margin-bottom:4px}
+.nabung-sub{font-size:12px;color:#999;margin-bottom:14px}
+
+.wallet-card.tabungan{border-top:3px solid #185FA5}
+.wallet-balance.tabungan{color:#185FA5}
 </style>
 </head>
 <body>
@@ -277,6 +310,7 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     <div class="wallet-card bank"><div class="wallet-icon">🏦</div><div class="wallet-name">Bank</div><div class="wallet-balance bank" id="bal-bank">Rp 0</div></div>
     <div class="wallet-card gopay"><div class="wallet-icon">📱</div><div class="wallet-name">GoPay</div><div class="wallet-balance gopay" id="bal-gopay">Rp 0</div></div>
     <div class="wallet-card cash"><div class="wallet-icon">💵</div><div class="wallet-name">Cash</div><div class="wallet-balance cash" id="bal-cash">Rp 0</div></div>
+    <div class="wallet-card tabungan" onclick="switchPage('tabungan')" style="cursor:pointer"><div class="wallet-icon">🎯</div><div class="wallet-name">Tabungan</div><div class="wallet-balance tabungan" id="bal-tabungan">Rp 0</div></div>
   </div>
   <div class="total-row">
     <div class="total-label">Total semua dompet</div>
@@ -296,6 +330,7 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     <button class="nav-tab" onclick="switchPage('laporan')">📊 Laporan</button>
     <button class="nav-tab" onclick="switchPage('kategori')">🏷 Kategori</button>
     <button class="nav-tab" onclick="openHutangWithPin()">💳 Hutang</button>
+    <button class="nav-tab" onclick="switchPage('tabungan')">🎯 Tabungan</button>
   </div>
 
   <!-- CATAT -->
@@ -454,6 +489,21 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     <div id="hutang-list"><div class="empty">Belum ada hutang tercatat 🎉</div></div>
   </div>
 
+  <!-- TABUNGAN -->
+  <div class="page" id="page-tabungan">
+    <div class="form-card">
+      <div class="section-label" style="margin-top:0">Buat target tabungan baru</div>
+      <div class="form-row"><label>Nama target</label><input type="text" id="tbn-nama" placeholder="Misal: Beli laptop baru"></div>
+      <div class="form-row"><label>Target jumlah (Rp)</label><div class="input-rp-wrap"><input type="number" id="tbn-target" placeholder="0" min="0" inputmode="numeric"></div></div>
+      <div class="form-row"><label>Deadline (opsional)</label><input type="date" id="tbn-deadline"></div>
+      <div class="form-row"><label>Catatan (opsional)</label><input type="text" id="tbn-note" placeholder="Catatan tambahan"></div>
+      <button class="btn-submit" onclick="addTabungan()">+ Buat Target Tabungan</button>
+    </div>
+
+    <div class="section-label">Target kamu</div>
+    <div id="tabungan-list"><div class="empty">Belum ada target tabungan</div></div>
+  </div>
+
 </div>
 
 
@@ -500,6 +550,28 @@ input[type="date"]::-webkit-calendar-picker-indicator {
   </div>
 </div>
 
+<!-- Nabung Modal -->
+<div class="nabung-modal" id="nabung-modal" onclick="closeNabungModal(event)">
+  <div class="nabung-box">
+    <div class="nabung-title">🎯 Tambah Tabungan</div>
+    <div class="nabung-sub" id="nabung-sub">Target —</div>
+    <div class="form-row"><label>Jumlah ditabung (Rp)</label><div class="input-rp-wrap"><input type="number" id="nabung-amount" placeholder="0" min="0" inputmode="numeric"></div></div>
+    <div class="form-row"><label>Dari dompet</label>
+      <select id="nabung-wallet">
+        <option value="bank">Bank</option>
+        <option value="gopay">GoPay</option>
+        <option value="cash">Cash</option>
+        <option value="none">Tidak potong dompet</option>
+      </select>
+    </div>
+    <div class="form-row"><label>Tanggal</label><input type="date" id="nabung-date"></div>
+    <div class="edit-btn-row">
+      <button class="btn-cancel-edit" onclick="document.getElementById('nabung-modal').classList.remove('show')">Batal</button>
+      <button class="btn-save-edit" onclick="saveNabung()">Simpan</button>
+    </div>
+  </div>
+</div>
+
 <!-- Edit Kategori Modal -->
 <div class="modal-overlay" id="edit-modal" onclick="closeEditModal(event)">
   <div class="modal-box">
@@ -529,8 +601,8 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const DOC_REF = doc(db, "keuangan", "data");
 
-const DEFAULT_CATS = ['Makan & Minum','Transport','Belanja','Kost/Sewa','Kesehatan','Hiburan','Lain-lain'];
-let state = {bank:0, gopay:0, cash:0, txs:[], cats: [...DEFAULT_CATS], hutangs:[]};
+const DEFAULT_CATS = ['Makan & Minum','Transport','Belanja','Kost/Sewa','Kesehatan','Hiburan','Tabungan','Lain-lain'];
+let state = {bank:0, gopay:0, cash:0, txs:[], cats: [...DEFAULT_CATS], hutangs:[], tabungans:[]};
 let currentPage = 0;
 const PAGE_SIZE = 10;
 let searchQuery = '';
@@ -588,6 +660,8 @@ function render() {
   document.getElementById('bal-bank').textContent = fmt(state.bank);
   document.getElementById('bal-gopay').textContent = fmt(state.gopay);
   document.getElementById('bal-cash').textContent = fmt(state.cash);
+  const totalTabungan = (state.tabungans||[]).reduce((s,t)=>s+t.current,0);
+  document.getElementById('bal-tabungan').textContent = fmt(totalTabungan);
   document.getElementById('bal-total').textContent = fmt(state.bank + state.gopay + state.cash);
   renderDailyExpense();
   renderHistory();
@@ -595,6 +669,7 @@ function render() {
   renderKategori();
   refreshCatDropdown();
   renderHutang();
+  renderTabungan();
 }
 
 function getSortedTxs() {
@@ -775,11 +850,12 @@ function toast(msg) {
 }
 
 window.switchPage = function(page) {
-  document.querySelectorAll('.nav-tab').forEach((b,i)=>b.classList.toggle('active',['catat','riwayat','laporan','kategori','hutang'][i]===page));
+  document.querySelectorAll('.nav-tab').forEach((b,i)=>b.classList.toggle('active',['catat','riwayat','laporan','kategori','hutang','tabungan'][i]===page));
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.getElementById('page-'+page).classList.add('active');
   if (page==='laporan') renderReport();
   if (page==='hutang') renderHutang();
+  if (page==='tabungan') renderTabungan();
   if (page!=='hutang') pinUnlocked = false;
   if (page==='riwayat') { currentPage=0; searchQuery=''; const si=document.getElementById('search-input'); if(si) si.value=''; const sc=document.getElementById('search-clear'); if(sc) sc.classList.remove('show'); renderHistory(); }
 };
@@ -1073,6 +1149,7 @@ window.importData = async function(e) {
     state = data;
     if (!state.cats) state.cats = [...DEFAULT_CATS];
     if (!state.hutangs) state.hutangs = [];
+    if (!state.tabungans) state.tabungans = [];
     render();
     await saveState();
     toast('Data berhasil di-import! ✓');
@@ -1177,6 +1254,97 @@ window.resetHutangPin = async function() {
   pinUnlocked = false;
   await saveState();
   toast('PIN direset');
+};
+
+
+// ── TABUNGAN ─────────────────────────────────────────
+let nabungIdx = -1;
+
+function renderTabungan() {
+  const el = document.getElementById('tabungan-list');
+  const list = state.tabungans || [];
+  if (!list.length) { el.innerHTML='<div class="empty">Belum ada target tabungan</div>'; return; }
+
+  el.innerHTML = list.map((tb,i) => {
+    const tercapai = tb.current >= tb.target;
+    const pct = tb.target > 0 ? Math.min(100, Math.round(tb.current/tb.target*100)) : 0;
+    const deadlineStr = tb.deadline ? 'Target selesai: ' + formatDateDisplay(tb.deadline) : '';
+    return `<div class="tabungan-card${tercapai?' tercapai':''}">
+      <div class="tabungan-header">
+        <div class="tabungan-nama">${tb.nama}</div>
+        <div class="tabungan-badge ${tercapai?'tercapai':'progress'}">${tercapai?'✓ Tercapai':pct+'%'}</div>
+      </div>
+      <div class="tabungan-amount-row">
+        <div class="tabungan-current${tercapai?' tercapai':''}">Rp ${Math.round(tb.current).toLocaleString('id-ID')}</div>
+        <div class="tabungan-target">/ Rp ${Math.round(tb.target).toLocaleString('id-ID')}</div>
+      </div>
+      ${deadlineStr ? `<div class="tabungan-deadline">${deadlineStr}</div>` : ''}
+      <div class="tabungan-progress-bg"><div class="tabungan-progress-fill${tercapai?' tercapai':''}" style="width:${pct}%"></div></div>
+      <div class="tabungan-pct">${pct}% tercapai</div>
+      ${tb.note ? `<div class="tabungan-note">${tb.note}</div>` : ''}
+      <div class="tabungan-actions">
+        ${!tercapai?`<button class="btn-nabung" onclick="openNabung(${i})">+ Tambah Tabungan</button>`:''}
+        <button class="btn-hapus-hutang" onclick="delTabungan(${i})">🗑</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+window.addTabungan = async function() {
+  const nama = getVal('tbn-nama');
+  const target = getNum('tbn-target');
+  const deadline = getVal('tbn-deadline');
+  const note = getVal('tbn-note');
+  if (!nama) { toast('Isi nama target dulu!'); return; }
+  if (!target) { toast('Isi target jumlah dulu!'); return; }
+  if (!state.tabungans) state.tabungans = [];
+  state.tabungans.push({nama, target, current:0, deadline, note});
+  document.getElementById('tbn-nama').value='';
+  document.getElementById('tbn-target').value='';
+  document.getElementById('tbn-deadline').value='';
+  document.getElementById('tbn-note').value='';
+  renderTabungan(); await saveState();
+  toast('Target tabungan dibuat! 🎯');
+};
+
+window.openNabung = function(i) {
+  nabungIdx = i;
+  const tb = state.tabungans[i];
+  document.getElementById('nabung-sub').textContent = 'Target: '+tb.nama+' · Sisa Rp '+Math.round(tb.target-tb.current).toLocaleString('id-ID');
+  document.getElementById('nabung-amount').value = '';
+  document.getElementById('nabung-date').value = new Date().toISOString().split('T')[0];
+  document.getElementById('nabung-modal').classList.add('show');
+};
+
+window.saveNabung = async function() {
+  if (nabungIdx < 0) return;
+  const amt = getNum('nabung-amount');
+  const wallet = getVal('nabung-wallet');
+  const date = getVal('nabung-date');
+  if (!amt) { toast('Isi jumlah dulu!'); return; }
+  if (wallet !== 'none') {
+    if (state[wallet] < amt) { toast('Saldo '+walletName(wallet)+' tidak cukup!'); return; }
+    state[wallet] -= amt;
+    state.txs.push({type:'expense', desc:'Nabung: '+state.tabungans[nabungIdx].nama, amount:amt, wallet, cat:'Tabungan', isoDate:date});
+  }
+  state.tabungans[nabungIdx].current += amt;
+  document.getElementById('nabung-modal').classList.remove('show');
+  const tercapai = state.tabungans[nabungIdx].current >= state.tabungans[nabungIdx].target;
+  nabungIdx = -1;
+  render(); await saveState();
+  toast(tercapai ? 'Target tercapai! 🎉' : 'Tabungan ditambahkan!');
+};
+
+window.delTabungan = async function(i) {
+  if (!confirm('Hapus target tabungan ini?')) return;
+  state.tabungans.splice(i,1);
+  renderTabungan(); await saveState();
+  toast('Target dihapus');
+};
+
+window.closeNabungModal = function(e) {
+  if (e.target === document.getElementById('nabung-modal'))
+    document.getElementById('nabung-modal').classList.remove('show');
 };
 
 // ── HUTANG ──────────────────────────────────────────
@@ -1304,6 +1472,7 @@ onSnapshot(DOC_REF, (snap) => {
     if (!state.txs) state.txs = [];
     if (!state.cats) state.cats = [...DEFAULT_CATS];
     if (!state.hutangs) state.hutangs = [];
+    if (!state.tabungans) state.tabungans = [];
   }
   setSyncStatus('ok');
   render();
